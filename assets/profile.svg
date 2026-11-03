@@ -99,14 +99,14 @@
 <text x="449" y="484" fill="#9fc6e6" font-size="12.5" font-weight="normal" >·</text>
 <text x="465" y="484" fill="#e0b58a" font-size="12.5" font-weight="normal" >Commits</text>
 <text x="529" y="484" fill="#6d6b81" font-size="12.5" font-weight="normal" >....................................................................</text>
-<text x="1070" y="484" fill="#9fc6e6" font-size="12.5" font-weight="normal" text-anchor="end">62</text>
+<text x="1070" y="484" fill="#9fc6e6" font-size="12.5" font-weight="normal" text-anchor="end">63</text>
 <text x="449" y="510" fill="#9fc6e6" font-size="12.5" font-weight="normal" >·</text>
 <text x="465" y="510" fill="#e0b58a" font-size="12.5" font-weight="normal" >Lines of Code</text>
 <text x="571" y="510" fill="#6d6b81" font-size="12.5" font-weight="normal" >........</text>
-<text x="750" y="510" fill="#9fc6e6" font-size="12.5" font-weight="normal" text-anchor="end">15,774</text>
+<text x="750" y="510" fill="#9fc6e6" font-size="12.5" font-weight="normal" text-anchor="end">16,208</text>
 <text x="773" y="510" fill="#d1cede" font-size="12.5" font-weight="normal" >(</text>
-<text x="893" y="510" fill="#a6da95" font-size="12.5" font-weight="normal" text-anchor="end">16,341+</text>
-<text x="1050" y="510" fill="#ed8796" font-size="12.5" font-weight="normal" text-anchor="end">567-</text>
+<text x="893" y="510" fill="#a6da95" font-size="12.5" font-weight="normal" text-anchor="end">16,810+</text>
+<text x="1050" y="510" fill="#ed8796" font-size="12.5" font-weight="normal" text-anchor="end">602-</text>
 <text x="1070" y="510" fill="#d1cede" font-size="12.5" font-weight="normal" text-anchor="end">)</text>
 <circle cx="452" cy="561" r="3.6" fill="#cdd6f4"/>
 <circle cx="467" cy="561" r="3.6" fill="#a6e3a1"/>
