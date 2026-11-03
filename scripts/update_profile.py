@@ -14,10 +14,6 @@ LOGIN = "hudbeard"
 CYAN = "#63e6dd"
 TEXT = "#c6d2db"
 MUTED = "#8294a4"
-ROW_COLORS = [
-    "#7dcfff", "#7aa2f7", "#bb9af7", "#f7768e", "#e0af68", "#9ece6a",
-    "#73daca", "#ff9e64", "#7dcfff", "#e0af68", "#bb9af7", "#f7768e", "#9ece6a",
-]
 
 
 def github(path):
@@ -72,23 +68,22 @@ def text(x, y, value, color=TEXT, size=14, weight="normal", **attrs):
 def render(profile, repos, updated):
     rows = json.loads((ROOT / "assets/avatar-ascii.json").read_text())
     parts = [
-        '<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="660" viewBox="0 0 1040 660" role="img" aria-labelledby="title description">',
+        '<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="650" viewBox="0 0 1120 650" role="img" aria-labelledby="title description">',
         '<title id="title">hudbeard@github</title>',
-        '<desc id="description">A fastfetch-inspired terminal with a colored ASCII rendering of hudbeard’s geometric avatar on the left, and Hudson’s system details, coding experience, and public GitHub stats on the right.</desc>',
-        '<rect x="1" y="1" width="1038" height="658" rx="14" fill="#0d141c" stroke="#2a3946"/>',
-        '<path d="M15 1H1025Q1039 1 1039 15V45H1V15Q1 1 15 1Z" fill="#16212c"/>',
-        '<path d="M1 45H1039" stroke="#2a3946"/>',
-        '<circle cx="25" cy="24" r="5" fill="#f07883"/><circle cx="44" cy="24" r="5" fill="#e5c07b"/><circle cx="63" cy="24" r="5" fill="#70c997"/>',
+        '<desc id="description">A quiet Linux terminal with a cyan ASCII avatar on the left and thin bordered System, Software, Uptime / Age, and GitHub sections on the right. Colored keys have dotted leaders and right-aligned values.</desc>',
+        '<defs><radialGradient id="ambient" cx="75%" cy="15%" r="90%"><stop stop-color="#29283d"/><stop offset="0.6" stop-color="#1e1e2e"/><stop offset="1" stop-color="#191a28"/></radialGradient></defs>',
+        '<rect width="1120" height="650" rx="7" fill="url(#ambient)"/>',
+        '<path d="M0 490L125 345L215 425L365 215L515 445L660 390L815 215L1010 450L1120 340V650H0Z" fill="#111322" opacity="0.16"/>',
+        '<path d="M0 570L185 465L335 555L470 405L640 560L825 435L970 535L1120 460V650H0Z" fill="#10121e" opacity="0.2"/>',
         '<g font-family="DejaVu Sans Mono, Liberation Mono, Consolas, monospace">',
-        text(520, 28, "hudbeard — ~/", MUTED, 12, text_anchor="middle"),
-        text(30, 86, "❯", CYAN, 19),
-        text(54, 85, "fastfetch", TEXT, 17),
-        text(156, 85, "--config me.jsonc", MUTED, 15),
-        '<path d="M464 122V595" stroke="#22313e"/>',
+        text(30, 36, "hudbeard@github", "#c8c5dc", 13),
+        text(157, 36, "~", "#a6b4cf", 13),
+        text(30, 59, "❯", "#a6d8bd", 14),
+        text(49, 59, "fastfetch", "#a8b9cf", 12),
     ]
     # Contiguous color runs preserve real monospace text in browsers and SVG renderers.
     for row_index, row in enumerate(rows):
-        spans = [f'<text x="31" y="{178 + row_index * 14}" font-size="13.5" xml:space="preserve">']
+        spans = [f'<text x="34" y="{173 + row_index * 12.5}" font-size="12" xml:space="preserve">']
         start = 0
         while start < len(row["text"]):
             color = row["colors"][start]
@@ -99,33 +94,39 @@ def render(profile, repos, updated):
             start = end
         spans.append('</text>')
         parts.append(''.join(spans))
+    values = dict(fact for fact in facts(profile, repos) if fact)
+    groups = [
+        ("System", 92, ["OS", "Kernel", "Host", "Locale"], ["#b2d7ab", "#a6d5bc", "#95d1c1", "#a8cfb0"]),
+        ("Software", 226, ["Langs", "Experience"], ["#e0c795", "#deb49b"]),
+        ("Uptime / Age", 316, ["Uptime (age)", "Joined", "Age Started Coding"], ["#acc5ed", "#aab4df", "#bfb1e0"]),
+        ("GitHub", 428, ["Repos", "Stars", "Followers", "Following"], ["#c7b2d8", "#e2c099", "#d6adc8", "#bea8d7"]),
+    ]
+    for title, top, keys, colors in groups:
+        left, right, center = 438, 1088, 763
+        bottom = top + 22 + len(keys) * 23
+        title_half = len(title) * 3.5 + 13
+        parts.append(f'<path d="M{left} {top+7}V{top}H{center-title_half}M{center+title_half} {top}H{right}V{top+7}M{left} {bottom-7}V{bottom}H{right}V{bottom-7}" fill="none" stroke="#555369" stroke-opacity="0.65" stroke-width="1"/>')
+        parts.append(text(center, top + 4, title, "#858199", 11, text_anchor="middle"))
+        parts.append(f'<path d="M{left+3} {top+19}H{left}V{bottom-15}H{left+3}" fill="none" stroke="{colors[0]}" stroke-opacity="0.8"/>')
+        for index, label in enumerate(keys):
+            value = values[label]
+            color = colors[index]
+            y = top + 29 + index * 23
+            cell = 7.53
+            leader_x = 465 + (len(label) + 1) * cell
+            value_x = 1070 - len(value) * cell
+            dots = "." * max(0, int((value_x - cell - leader_x) / cell))
+            parts.append(text(449, y, "›", color, 12.5))
+            parts.append(text(465, y, label, color, 12.5))
+            parts.append(text(leader_x, y, dots, color, 12.5, opacity="0.25"))
+            parts.append(text(1070, y, value, "#d1cede", 12.5, text_anchor="end"))
+    for index, color in enumerate(["#cdd6f4", "#a6e3a1", "#94e2d5", "#89dceb", "#89b4fa", "#b4befe", "#cba6f7", "#f9e2af", "#f5c2e7"]):
+        parts.append(f'<circle cx="{452 + index * 15}" cy="561" r="3.6" fill="{color}"/>')
     parts.extend([
-        text(490, 142, "hudbeard", CYAN, 19, "bold"),
-        text(582, 142, "@", MUTED, 19),
-        text(595, 142, "github", TEXT, 19),
-        text(490, 165, "──────────────────────────────────────────", MUTED, 14),
-    ])
-    row_number = 0
-    for index, fact in enumerate(facts(profile, repos)):
-        if fact is None:
-            continue
-        label, value = fact
-        y = 194 + index * 24
-        color = ROW_COLORS[row_number % len(ROW_COLORS)]
-        row_number += 1
-        # Measure leaders in monospace cells; every value shares the same right edge.
-        cell = 7.23
-        leader_x = 490 + (len(label) + 1) * cell
-        value_x = 1005 - len(value) * cell
-        dots = "." * max(0, int((value_x - cell - leader_x) / cell))
-        parts.append(text(490, y, label, color, 12, "bold"))
-        parts.append(text(leader_x, y, dots, color, 12, opacity="0.4"))
-        parts.append(text(1005, y, value, color, 12, text_anchor="end"))
-    for index, color in enumerate(["#233342", "#f07883", "#70c997", "#e5c07b", "#7aa2f7", "#bb9af7", CYAN, "#c6d2db"]):
-        parts.append(f'<rect x="{490 + index * 25}" y="583" width="25" height="15" fill="{color}"/>')
-    parts.extend([
-        '<path d="M30 619H1010" stroke="#22313e"/>',
-        text(1010, 643, f"public stats · {updated} UTC", MUTED, 11, text_anchor="end"),
+        text(30, 608, "λ ~/", "#a6d8d2", 13),
+        text(79, 608, "·" * 129, "#555367", 7.2),
+        text(1088, 608, updated + " UTC", "#747187", 10, text_anchor="end"),
+        text(30, 631, "❯", "#c8b8db", 14),
         '</g></svg>\n',
     ])
     (ROOT / "assets/profile.svg").write_text("\n".join(parts), encoding="utf-8")
