@@ -18,22 +18,22 @@
 <!-- profile:stats:start -->
 
 ```text
-OS: HudbeardOS x86_64
-Kernel: Linux
-Host: Hudson
-Uptime (age): 19 years
-Joined: May 2022
-Age Started Coding: 8 years
+OS .................................................. HudbeardOS x86_64
+Kernel .......................................................... Linux
+Host ........................................................... Hudson
+Uptime (age) ................................................. 19 years
+Joined ....................................................... May 2022
+Age Started Coding ............................................ 8 years
 
-Langs: Python / Java / C++
-Experience: 3 years CrownQuest / 1 year Cosee Home
+Langs ............................................. Python / Java / C++
+Experience ..................... 3 years CrownQuest / 1 year Cosee Home
 
-Repos: 11
-Stars: 12
-Followers: 6
-Following: 5
+Repos .............................................................. 11
+Stars .............................................................. 12
+Followers ........................................................... 6
+Following ........................................................... 5
 
-Locale: en_US
+Locale .......................................................... en_US
 ```
 
 <!-- profile:stats:end -->

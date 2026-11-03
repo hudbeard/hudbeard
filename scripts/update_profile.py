@@ -14,6 +14,10 @@ LOGIN = "hudbeard"
 CYAN = "#63e6dd"
 TEXT = "#c6d2db"
 MUTED = "#8294a4"
+ROW_COLORS = [
+    "#7dcfff", "#7aa2f7", "#bb9af7", "#f7768e", "#e0af68", "#9ece6a",
+    "#73daca", "#ff9e64", "#7dcfff", "#e0af68", "#bb9af7", "#f7768e", "#9ece6a",
+]
 
 
 def github(path):
@@ -84,7 +88,7 @@ def render(profile, repos, updated):
     ]
     # Contiguous color runs preserve real monospace text in browsers and SVG renderers.
     for row_index, row in enumerate(rows):
-        spans = [f'<text x="31" y="{150 + row_index * 12}" font-size="10.5" xml:space="preserve">']
+        spans = [f'<text x="31" y="{178 + row_index * 14}" font-size="13.5" xml:space="preserve">']
         start = 0
         while start < len(row["text"]):
             color = row["colors"][start]
@@ -101,13 +105,22 @@ def render(profile, repos, updated):
         text(595, 142, "github", TEXT, 19),
         text(490, 165, "──────────────────────────────────────────", MUTED, 14),
     ])
+    row_number = 0
     for index, fact in enumerate(facts(profile, repos)):
         if fact is None:
             continue
         label, value = fact
         y = 194 + index * 24
-        parts.append(text(490, y, label + ":", CYAN, 12, "bold"))
-        parts.append(text(638, y, value, TEXT, 12))
+        color = ROW_COLORS[row_number % len(ROW_COLORS)]
+        row_number += 1
+        # Measure leaders in monospace cells; every value shares the same right edge.
+        cell = 7.23
+        leader_x = 490 + (len(label) + 1) * cell
+        value_x = 1005 - len(value) * cell
+        dots = "." * max(0, int((value_x - cell - leader_x) / cell))
+        parts.append(text(490, y, label, color, 12, "bold"))
+        parts.append(text(leader_x, y, dots, color, 12, opacity="0.4"))
+        parts.append(text(1005, y, value, color, 12, text_anchor="end"))
     for index, color in enumerate(["#233342", "#f07883", "#70c997", "#e5c07b", "#7aa2f7", "#bb9af7", CYAN, "#c6d2db"]):
         parts.append(f'<rect x="{490 + index * 25}" y="583" width="25" height="15" fill="{color}"/>')
     parts.extend([
@@ -117,7 +130,10 @@ def render(profile, repos, updated):
     ])
     (ROOT / "assets/profile.svg").write_text("\n".join(parts), encoding="utf-8")
     # Accessible text keeps the profile useful without image rendering.
-    summary = "\n".join(f"{fact[0]}: {fact[1]}" if fact else "" for fact in facts(profile, repos))
+    summary = "\n".join(
+        f"{fact[0]} {'.' * max(1, 69 - len(fact[0]) - len(fact[1]))} {fact[1]}" if fact else ""
+        for fact in facts(profile, repos)
+    )
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     start, end = "<!-- profile:stats:start -->", "<!-- profile:stats:end -->"
     before, rest = readme.split(start, 1)
