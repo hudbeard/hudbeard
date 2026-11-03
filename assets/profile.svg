@@ -83,25 +83,31 @@
 <text x="465" y="391" fill="#bfb1e0" font-size="12.5" font-weight="normal" >Age Started Coding</text>
 <text x="608.0699999999999" y="391" fill="#bfb1e0" font-size="12.5" font-weight="normal" opacity="0.25">.....................................................</text>
 <text x="1070" y="391" fill="#d1cede" font-size="12.5" font-weight="normal" text-anchor="end">8 years</text>
-<path d="M438 435V428H729.0M797.0 428H1088V435M438 535V542H1088V535" fill="none" stroke="#555369" stroke-opacity="0.65" stroke-width="1"/>
-<text x="763" y="432" fill="#858199" font-size="11" font-weight="normal" text-anchor="middle">GitHub</text>
-<path d="M441 447H438V527H441" fill="none" stroke="#c7b2d8" stroke-opacity="0.8"/>
-<text x="449" y="457" fill="#c7b2d8" font-size="12.5" font-weight="normal" >›</text>
-<text x="465" y="457" fill="#c7b2d8" font-size="12.5" font-weight="normal" >Repos</text>
-<text x="510.18" y="457" fill="#c7b2d8" font-size="12.5" font-weight="normal" opacity="0.25">.......................................................................</text>
-<text x="1070" y="457" fill="#d1cede" font-size="12.5" font-weight="normal" text-anchor="end">11</text>
-<text x="449" y="480" fill="#e2c099" font-size="12.5" font-weight="normal" >›</text>
-<text x="465" y="480" fill="#e2c099" font-size="12.5" font-weight="normal" >Stars</text>
-<text x="510.18" y="480" fill="#e2c099" font-size="12.5" font-weight="normal" opacity="0.25">.......................................................................</text>
-<text x="1070" y="480" fill="#d1cede" font-size="12.5" font-weight="normal" text-anchor="end">12</text>
-<text x="449" y="503" fill="#d6adc8" font-size="12.5" font-weight="normal" >›</text>
-<text x="465" y="503" fill="#d6adc8" font-size="12.5" font-weight="normal" >Followers</text>
-<text x="540.3" y="503" fill="#d6adc8" font-size="12.5" font-weight="normal" opacity="0.25">....................................................................</text>
-<text x="1070" y="503" fill="#d1cede" font-size="12.5" font-weight="normal" text-anchor="end">6</text>
-<text x="449" y="526" fill="#bea8d7" font-size="12.5" font-weight="normal" >›</text>
-<text x="465" y="526" fill="#bea8d7" font-size="12.5" font-weight="normal" >Following</text>
-<text x="540.3" y="526" fill="#bea8d7" font-size="12.5" font-weight="normal" opacity="0.25">....................................................................</text>
-<text x="1070" y="526" fill="#d1cede" font-size="12.5" font-weight="normal" text-anchor="end">5</text>
+<path d="M438 435V428H713M813 428H1088V435M438 535V542H1088V535" fill="none" stroke="#555369" stroke-opacity="0.65"/>
+<text x="763" y="432" fill="#a5a0b7" font-size="11" font-weight="normal" text-anchor="middle">GitHub Stats</text>
+<text x="449" y="458" fill="#9fc6e6" font-size="12.5" font-weight="normal" >·</text>
+<text x="465" y="458" fill="#e0b58a" font-size="12.5" font-weight="normal" >Repos</text>
+<text x="514" y="458" fill="#6d6b81" font-size="12.5" font-weight="normal" >..</text>
+<text x="550" y="458" fill="#9fc6e6" font-size="12.5" font-weight="normal" text-anchor="end">11</text>
+<text x="562" y="458" fill="#e0b58a" font-size="12.5" font-weight="normal" >{ Contributed</text>
+<text x="689" y="458" fill="#9fc6e6" font-size="12.5" font-weight="normal" text-anchor="end">8</text>
+<text x="701" y="458" fill="#e0b58a" font-size="12.5" font-weight="normal" >}</text>
+<text x="723" y="458" fill="#e0b58a" font-size="12.5" font-weight="normal" >│</text>
+<text x="741" y="458" fill="#e0b58a" font-size="12.5" font-weight="normal" >Stars</text>
+<text x="791" y="458" fill="#6d6b81" font-size="12.5" font-weight="normal" >..................................</text>
+<text x="1070" y="458" fill="#9fc6e6" font-size="12.5" font-weight="normal" text-anchor="end">12</text>
+<text x="449" y="484" fill="#9fc6e6" font-size="12.5" font-weight="normal" >·</text>
+<text x="465" y="484" fill="#e0b58a" font-size="12.5" font-weight="normal" >Commits</text>
+<text x="529" y="484" fill="#6d6b81" font-size="12.5" font-weight="normal" >....................................................................</text>
+<text x="1070" y="484" fill="#9fc6e6" font-size="12.5" font-weight="normal" text-anchor="end">62</text>
+<text x="449" y="510" fill="#9fc6e6" font-size="12.5" font-weight="normal" >·</text>
+<text x="465" y="510" fill="#e0b58a" font-size="12.5" font-weight="normal" >Lines of Code</text>
+<text x="571" y="510" fill="#6d6b81" font-size="12.5" font-weight="normal" >........</text>
+<text x="750" y="510" fill="#9fc6e6" font-size="12.5" font-weight="normal" text-anchor="end">15,774</text>
+<text x="773" y="510" fill="#d1cede" font-size="12.5" font-weight="normal" >(</text>
+<text x="893" y="510" fill="#a6da95" font-size="12.5" font-weight="normal" text-anchor="end">16,341+</text>
+<text x="1050" y="510" fill="#ed8796" font-size="12.5" font-weight="normal" text-anchor="end">567-</text>
+<text x="1070" y="510" fill="#d1cede" font-size="12.5" font-weight="normal" text-anchor="end">)</text>
 <circle cx="452" cy="561" r="3.6" fill="#cdd6f4"/>
 <circle cx="467" cy="561" r="3.6" fill="#a6e3a1"/>
 <circle cx="482" cy="561" r="3.6" fill="#94e2d5"/>

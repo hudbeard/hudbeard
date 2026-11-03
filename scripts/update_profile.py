@@ -4,9 +4,11 @@
 import argparse
 import json
 import os
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from html import escape
 from pathlib import Path
+from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -16,12 +18,16 @@ TEXT = "#c6d2db"
 MUTED = "#8294a4"
 
 
-def github(path):
+def github(path, payload=None):
     headers = {"Accept": "application/vnd.github+json", "User-Agent": "hudbeard-profile"}
     if os.environ.get("GITHUB_TOKEN"):
         headers["Authorization"] = f"Bearer {os.environ['GITHUB_TOKEN']}"
-    with urlopen(Request(f"https://api.github.com/{path}", headers=headers), timeout=30) as response:
-        return json.load(response)
+    data = None if payload is None else json.dumps(payload).encode()
+    if data is not None:
+        headers["Content-Type"] = "application/json"
+    with urlopen(Request(f"https://api.github.com/{path}", headers=headers, data=data), timeout=30) as response:
+        body = response.read()
+        return json.loads(body) if body else None
 
 
 def public_data():
@@ -37,7 +43,77 @@ def public_data():
     return profile, repos
 
 
-def facts(profile, repos):
+def collect_activity(profile, repos):
+    """Count public default-branch authorship, deduplicated by commit SHA."""
+    names = {repo["full_name"] for repo in repos if not repo.get("private")}
+    first_year = int(profile["created_at"][:4])
+    now = datetime.now(timezone.utc)
+    for year in range(first_year, now.year + 1):
+        start = f"{year}-01-01T00:00:00Z"
+        end = f"{year}-12-31T23:59:59Z" if year < now.year else now.strftime("%Y-%m-%dT%H:%M:%SZ")
+        query = '''query($login:String!, $from:DateTime!, $to:DateTime!) {
+          user(login:$login) { contributionsCollection(from:$from,to:$to) {
+            commitContributionsByRepository(maxRepositories:100) {
+              repository { nameWithOwner isPrivate }
+            }
+          } }
+        }'''
+        result = github("graphql", {"query": query, "variables": {"login": LOGIN, "from": start, "to": end}})
+        if result.get("errors"):
+            raise RuntimeError("GitHub could not return the full contribution history")
+        collection = result["data"]["user"]["contributionsCollection"]["commitContributionsByRepository"]
+        if len(collection) == 100:
+            raise RuntimeError("Contribution history exceeded GitHub's repository limit; refusing partial totals")
+        # Never publish or request commit details for private repositories.
+        names.update(item["repository"]["nameWithOwner"] for item in collection if not item["repository"]["isPrivate"])
+
+    def authored_commits(name):
+        commits = []
+        page = 1
+        while True:
+            try:
+                batch = github(f"repos/{name}/commits?per_page=100&page={page}")
+            except HTTPError as error:
+                if error.code == 409:  # Empty repositories have no commit history.
+                    error.close()
+                    return commits
+                raise
+            for commit in batch:
+                linked = (commit.get("author") or {}).get("login", "").lower() == LOGIN
+                unlinked = commit.get("author") is None and name.split("/")[0].lower() == LOGIN and commit["commit"]["author"]["name"].lower() == LOGIN
+                if (linked or unlinked) and len(commit["parents"]) <= 1:
+                    commits.append((commit["sha"], name))
+            if len(batch) < 100:
+                return commits
+            page += 1
+
+    commits = {}
+    contributed = set()
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        for batch in pool.map(authored_commits, sorted(names)):
+            for sha, name in batch:
+                commits.setdefault(sha, name)
+                contributed.add(name)
+    cache_path = ROOT / "assets/activity-cache.json"
+    cache = json.loads(cache_path.read_text()) if cache_path.exists() else {}
+
+    def changes(item):
+        sha, name = item
+        if sha in cache:
+            return sha, cache[sha]
+        stats = github(f"repos/{name}/commits/{sha}")["stats"]
+        return sha, {"added": stats["additions"], "deleted": stats["deletions"]}
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        current = dict(pool.map(changes, commits.items()))
+    # Only cache immutable, public commit totals; no author names or email addresses.
+    cache_path.write_text(json.dumps(current, sort_keys=True, indent=2) + "\n")
+    added = sum(item["added"] for item in current.values())
+    deleted = sum(item["deleted"] for item in current.values())
+    return {"commits": len(commits), "contributed": len(contributed), "added": added, "deleted": deleted, "net": added - deleted}
+
+
+def facts(profile, repos, activity):
     original = [repo for repo in repos if not repo.get("fork") and not repo.get("private")]
     joined = datetime.fromisoformat(profile["created_at"].replace("Z", "+00:00")).strftime("%b %Y")
     return [
@@ -53,8 +129,11 @@ def facts(profile, repos):
         None,
         ("Repos", str(profile["public_repos"])),
         ("Stars", f"{sum(repo['stargazers_count'] for repo in original):,}"),
-        ("Followers", str(profile["followers"])),
-        ("Following", str(profile["following"])),
+        ("Contributed", str(activity["contributed"])),
+        ("Commits", f"{activity['commits']:,}"),
+        ("Lines of Code", f"{activity['net']:,}"),
+        ("Lines Added", f"{activity['added']:,}+"),
+        ("Lines Removed", f"{activity['deleted']:,}-"),
         None,
         ("Locale", "en_US"),
     ]
@@ -65,7 +144,7 @@ def text(x, y, value, color=TEXT, size=14, weight="normal", **attrs):
     return f'<text x="{x}" y="{y}" fill="{color}" font-size="{size}" font-weight="{weight}" {extra}>{escape(value)}</text>'
 
 
-def render(profile, repos, updated):
+def render(profile, repos, updated, activity):
     rows = json.loads((ROOT / "assets/avatar-ascii.json").read_text())
     parts = [
         '<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="650" viewBox="0 0 1120 650" role="img" aria-labelledby="title description">',
@@ -94,12 +173,11 @@ def render(profile, repos, updated):
             start = end
         spans.append('</text>')
         parts.append(''.join(spans))
-    values = dict(fact for fact in facts(profile, repos) if fact)
+    values = dict(fact for fact in facts(profile, repos, activity) if fact)
     groups = [
         ("System", 92, ["OS", "Kernel", "Host", "Locale"], ["#b2d7ab", "#a6d5bc", "#95d1c1", "#a8cfb0"]),
         ("Software", 226, ["Langs", "Experience"], ["#e0c795", "#deb49b"]),
         ("Uptime / Age", 316, ["Uptime (age)", "Joined", "Age Started Coding"], ["#acc5ed", "#aab4df", "#bfb1e0"]),
-        ("GitHub", 428, ["Repos", "Stars", "Followers", "Following"], ["#c7b2d8", "#e2c099", "#d6adc8", "#bea8d7"]),
     ]
     for title, top, keys, colors in groups:
         left, right, center = 438, 1088, 763
@@ -120,6 +198,33 @@ def render(profile, repos, updated):
             parts.append(text(465, y, label, color, 12.5))
             parts.append(text(leader_x, y, dots, color, 12.5, opacity="0.25"))
             parts.append(text(1070, y, value, "#d1cede", 12.5, text_anchor="end"))
+    # A compact two-column block, matching a terminal fetch statistics module.
+    parts.append('<path d="M438 435V428H713M813 428H1088V435M438 535V542H1088V535" fill="none" stroke="#555369" stroke-opacity="0.65"/>')
+    parts.append(text(763, 432, "GitHub Stats", "#a5a0b7", 11, text_anchor="middle"))
+    gold, blue = "#e0b58a", "#9fc6e6"
+    parts.append(text(449, 458, "·", blue, 12.5))
+    parts.append(text(465, 458, "Repos", gold, 12.5))
+    parts.append(text(514, 458, "..", "#6d6b81", 12.5))
+    parts.append(text(550, 458, values["Repos"], blue, 12.5, text_anchor="end"))
+    parts.append(text(562, 458, "{ Contributed", gold, 12.5))
+    parts.append(text(689, 458, values["Contributed"], blue, 12.5, text_anchor="end"))
+    parts.append(text(701, 458, "}", gold, 12.5))
+    parts.append(text(723, 458, "│", gold, 12.5))
+    parts.append(text(741, 458, "Stars", gold, 12.5))
+    parts.append(text(791, 458, "." * max(1, 36 - len(values["Stars"])), "#6d6b81", 12.5))
+    parts.append(text(1070, 458, values["Stars"], blue, 12.5, text_anchor="end"))
+    parts.append(text(449, 484, "·", blue, 12.5))
+    parts.append(text(465, 484, "Commits", gold, 12.5))
+    parts.append(text(529, 484, "." * max(1, 70 - len(values["Commits"])), "#6d6b81", 12.5))
+    parts.append(text(1070, 484, values["Commits"], blue, 12.5, text_anchor="end"))
+    parts.append(text(449, 510, "·", blue, 12.5))
+    parts.append(text(465, 510, "Lines of Code", gold, 12.5))
+    parts.append(text(571, 510, "." * 8, "#6d6b81", 12.5))
+    parts.append(text(750, 510, values["Lines of Code"], blue, 12.5, text_anchor="end"))
+    parts.append(text(773, 510, "(", "#d1cede", 12.5))
+    parts.append(text(893, 510, values["Lines Added"], "#a6da95", 12.5, text_anchor="end"))
+    parts.append(text(1050, 510, values["Lines Removed"], "#ed8796", 12.5, text_anchor="end"))
+    parts.append(text(1070, 510, ")", "#d1cede", 12.5, text_anchor="end"))
     for index, color in enumerate(["#cdd6f4", "#a6e3a1", "#94e2d5", "#89dceb", "#89b4fa", "#b4befe", "#cba6f7", "#f9e2af", "#f5c2e7"]):
         parts.append(f'<circle cx="{452 + index * 15}" cy="561" r="3.6" fill="{color}"/>')
     parts.extend([
@@ -133,7 +238,7 @@ def render(profile, repos, updated):
     # Accessible text keeps the profile useful without image rendering.
     summary = "\n".join(
         f"{fact[0]} {'.' * max(1, 69 - len(fact[0]) - len(fact[1]))} {fact[1]}" if fact else ""
-        for fact in facts(profile, repos)
+        for fact in facts(profile, repos, activity)
     )
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     start, end = "<!-- profile:stats:start -->", "<!-- profile:stats:end -->"
@@ -149,9 +254,11 @@ def main():
     if args.fixtures:
         profile = json.loads((args.fixtures / "profile.json").read_text())
         repos = json.loads((args.fixtures / "repos.json").read_text())
+        activity = json.loads((args.fixtures / "activity.json").read_text())
     else:
         profile, repos = public_data()
-    render(profile, repos, datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+        activity = collect_activity(profile, repos)
+    render(profile, repos, datetime.now(timezone.utc).strftime("%Y-%m-%d"), activity)
 
 
 if __name__ == "__main__":

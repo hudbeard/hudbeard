@@ -28,13 +28,18 @@ Experience ..................... 3 years CrownQuest / 1 year Cosee Home
 
 Repos .............................................................. 11
 Stars .............................................................. 12
-Followers ........................................................... 6
-Following ........................................................... 5
+Contributed ......................................................... 8
+Commits ............................................................ 62
+Lines of Code .................................................. 15,774
+Lines Added ................................................... 16,341+
+Lines Removed .................................................... 567-
 
 Locale .......................................................... en_US
 ```
 
 <!-- profile:stats:end -->
+
+Stats cover public repositories and non-merge commits on their default branches, deduplicated by commit SHA. Older, unlinked commits authored as `hudbeard` in my own repositories are included. Lines of Code is net authored additions minus deletions; the green and red figures show the respective totals. Binary files do not contribute line counts.
 
 </details>
 
