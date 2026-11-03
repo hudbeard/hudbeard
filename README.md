@@ -1,9 +1,7 @@
 <h1>~/hudbeard</h1>
 
-Python on Linux. Currently at **CrownQuest**.
-
 <p>
-  <img src="./assets/profile.svg" width="1040" alt="hudbeard's fastfetch profile: a cyan and gray ASCII avatar on the left; Linux, Python, CrownQuest, and public GitHub statistics on the right." />
+  <img src="./assets/profile.svg" width="1040" alt="Hudson's fastfetch profile: a cyan and gray ASCII avatar on the left; HudbeardOS, Linux, age, coding experience, and public GitHub statistics on the right. Expand cat profile.txt below for the full text." />
 </p>
 
 [`~/repos`](https://github.com/hudbeard?tab=repositories) · [`~/writing`](https://medium.com/@hudbeard) · [`~/ascii`](./assets/avatar-ascii.txt)
@@ -20,17 +18,22 @@ Python on Linux. Currently at **CrownQuest**.
 <!-- profile:stats:start -->
 
 ```text
-OS: Linux
-Language: Python
-Work: CrownQuest
-Projects: Desktop tools / graphics / robotics
-Writing: medium.com/@hudbeard
+OS: HudbeardOS x86_64
+Kernel: Linux
+Host: Hudson
+Uptime (age): 19 years
 Joined: May 2022
-Repos: 11 public
-Stars: 12 on original repos
+Age Started Coding: 8 years
+
+Langs: Python / Java / C++
+Experience: 3 years CrownQuest / 1 year Cosee Home
+
+Repos: 11
+Stars: 12
 Followers: 6
 Following: 5
-Repo langs: Python / Java / CSS
+
+Locale: en_US
 ```
 
 <!-- profile:stats:end -->
