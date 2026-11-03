@@ -2,7 +2,7 @@
   <img src="./assets/profile.svg" width="1120" alt="Hudson's Linux terminal profile: a cyan and gray ASCII avatar beside pastel System, Software, Uptime / Age, and GitHub sections. Expand cat profile.txt below for the full text." />
 </p>
 
-[`~/repos`](https://github.com/hudbeard?tab=repositories) · [`~/writing`](https://medium.com/@hudbeard) · [`~/ascii`](./assets/avatar-ascii.txt)
+[`~/repos`](https://github.com/hudbeard?tab=repositories) · [`~/ascii`](./assets/avatar-ascii.txt)
 
 ### A few things I've built
 

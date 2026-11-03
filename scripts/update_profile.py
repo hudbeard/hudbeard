@@ -13,9 +13,9 @@ from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
 LOGIN = "hudbeard"
-CYAN = "#63e6dd"
 TEXT = "#c6d2db"
-MUTED = "#8294a4"
+FONT_SIZE = 12.5
+CELL = 7.53
 
 
 def github(path, payload=None):
@@ -140,20 +140,40 @@ def facts(profile, repos, activity):
 
 
 def text(x, y, value, color=TEXT, size=14, weight="normal", **attrs):
+    if weight != "normal":
+        attrs["font_weight"] = weight
     extra = " ".join(f'{key.replace("_", "-")}="{escape(str(value), quote=True)}"' for key, value in attrs.items())
-    return f'<text x="{x}" y="{y}" fill="{color}" font-size="{size}" font-weight="{weight}" {extra}>{escape(value)}</text>'
+    return f'<text x="{x}" y="{y}" fill="{color}" font-size="{size}"{(" " + extra) if extra else ""}>{escape(value)}</text>'
 
 
-def render(profile, repos, updated, activity):
+def leaders(parts, label, value_length, x, y, right):
+    start = x + (len(label) + 1) * CELL
+    end = right - (value_length + 1) * CELL
+    dots = "." * max(0, int((end - start) / CELL))
+    parts.append(text(start, y, dots, "#605e72", FONT_SIZE))
+
+
+def field(parts, label, value, x, y, right, color, value_color="#d1cede"):
+    parts.append(text(x, y, label, color, FONT_SIZE))
+    leaders(parts, label, len(value), x, y, right)
+    parts.append(text(right, y, value, value_color, FONT_SIZE, text_anchor="end"))
+
+
+def section(parts, title, top, bottom, accent):
+    left, right, center = 438, 1088, 763
+    gap = len(title) * 3.5 + 13
+    parts.append(f'<path d="M{left} {top+7}V{top}H{center-gap}M{center+gap} {top}H{right}V{top+7}M{left} {bottom-7}V{bottom}H{right}V{bottom-7}" fill="none" stroke="#4f4d60"/>')
+    parts.append(text(center, top + 4, title, "#a5a0b7", 11, text_anchor="middle"))
+    parts.append(f'<path d="M{left+3} {top+19}H{left}V{bottom-15}H{left+3}" fill="none" stroke="{accent}"/>')
+
+
+def render(profile, repos, activity):
     rows = json.loads((ROOT / "assets/avatar-ascii.json").read_text())
     parts = [
-        '<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="650" viewBox="0 0 1120 650" role="img" aria-labelledby="title description">',
+        '<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="570" viewBox="0 0 1120 570" role="img" aria-labelledby="title description">',
         '<title id="title">hudbeard@github</title>',
-        '<desc id="description">A quiet Linux terminal with a cyan ASCII avatar on the left and thin bordered System, Software, Uptime / Age, and GitHub sections on the right. Colored keys have dotted leaders and right-aligned values.</desc>',
-        '<defs><radialGradient id="ambient" cx="75%" cy="15%" r="90%"><stop stop-color="#29283d"/><stop offset="0.6" stop-color="#1e1e2e"/><stop offset="1" stop-color="#191a28"/></radialGradient></defs>',
-        '<rect width="1120" height="650" rx="7" fill="url(#ambient)"/>',
-        '<path d="M0 490L125 345L215 425L365 215L515 445L660 390L815 215L1010 450L1120 340V650H0Z" fill="#111322" opacity="0.16"/>',
-        '<path d="M0 570L185 465L335 555L470 405L640 560L825 435L970 535L1120 460V650H0Z" fill="#10121e" opacity="0.2"/>',
+        '<desc id="description">Hudson’s terminal profile, with a cyan ASCII avatar and System, Software, Uptime / Age, and GitHub Stats sections. GitHub stats show public repositories, stars, contributed repositories, commits, and net line changes.</desc>',
+        '<rect width="1120" height="570" fill="#1e1e2e"/>',
         '<g font-family="DejaVu Sans Mono, Liberation Mono, Consolas, monospace">',
         text(30, 36, "hudbeard@github", "#c8c5dc", 13),
         text(157, 36, "~", "#a6b4cf", 13),
@@ -180,60 +200,29 @@ def render(profile, repos, updated, activity):
         ("Uptime / Age", 316, ["Uptime (age)", "Joined", "Age Started Coding"], ["#acc5ed", "#aab4df", "#bfb1e0"]),
     ]
     for title, top, keys, colors in groups:
-        left, right, center = 438, 1088, 763
         bottom = top + 22 + len(keys) * 23
-        title_half = len(title) * 3.5 + 13
-        parts.append(f'<path d="M{left} {top+7}V{top}H{center-title_half}M{center+title_half} {top}H{right}V{top+7}M{left} {bottom-7}V{bottom}H{right}V{bottom-7}" fill="none" stroke="#555369" stroke-opacity="0.65" stroke-width="1"/>')
-        parts.append(text(center, top + 4, title, "#858199", 11, text_anchor="middle"))
-        parts.append(f'<path d="M{left+3} {top+19}H{left}V{bottom-15}H{left+3}" fill="none" stroke="{colors[0]}" stroke-opacity="0.8"/>')
+        section(parts, title, top, bottom, colors[0])
         for index, label in enumerate(keys):
-            value = values[label]
-            color = colors[index]
             y = top + 29 + index * 23
-            cell = 7.53
-            leader_x = 465 + (len(label) + 1) * cell
-            value_x = 1070 - len(value) * cell
-            dots = "." * max(0, int((value_x - cell - leader_x) / cell))
-            parts.append(text(449, y, "›", color, 12.5))
-            parts.append(text(465, y, label, color, 12.5))
-            parts.append(text(leader_x, y, dots, color, 12.5, opacity="0.25"))
-            parts.append(text(1070, y, value, "#d1cede", 12.5, text_anchor="end"))
-    # A compact two-column block, matching a terminal fetch statistics module.
-    parts.append('<path d="M438 435V428H713M813 428H1088V435M438 535V542H1088V535" fill="none" stroke="#555369" stroke-opacity="0.65"/>')
-    parts.append(text(763, 432, "GitHub Stats", "#a5a0b7", 11, text_anchor="middle"))
+            field(parts, label, values[label], 465, y, 1070, colors[index])
+    section(parts, "GitHub Stats", 428, 537, "#c7b2d8")
     gold, blue = "#e0b58a", "#9fc6e6"
-    parts.append(text(449, 458, "·", blue, 12.5))
-    parts.append(text(465, 458, "Repos", gold, 12.5))
-    parts.append(text(514, 458, "..", "#6d6b81", 12.5))
-    parts.append(text(550, 458, values["Repos"], blue, 12.5, text_anchor="end"))
-    parts.append(text(562, 458, "{ Contributed", gold, 12.5))
-    parts.append(text(689, 458, values["Contributed"], blue, 12.5, text_anchor="end"))
-    parts.append(text(701, 458, "}", gold, 12.5))
-    parts.append(text(723, 458, "│", gold, 12.5))
-    parts.append(text(741, 458, "Stars", gold, 12.5))
-    parts.append(text(791, 458, "." * max(1, 36 - len(values["Stars"])), "#6d6b81", 12.5))
-    parts.append(text(1070, 458, values["Stars"], blue, 12.5, text_anchor="end"))
-    parts.append(text(449, 484, "·", blue, 12.5))
-    parts.append(text(465, 484, "Commits", gold, 12.5))
-    parts.append(text(529, 484, "." * max(1, 70 - len(values["Commits"])), "#6d6b81", 12.5))
-    parts.append(text(1070, 484, values["Commits"], blue, 12.5, text_anchor="end"))
-    parts.append(text(449, 510, "·", blue, 12.5))
-    parts.append(text(465, 510, "Lines of Code", gold, 12.5))
-    parts.append(text(571, 510, "." * 8, "#6d6b81", 12.5))
-    parts.append(text(750, 510, values["Lines of Code"], blue, 12.5, text_anchor="end"))
-    parts.append(text(773, 510, "(", "#d1cede", 12.5))
-    parts.append(text(893, 510, values["Lines Added"], "#a6da95", 12.5, text_anchor="end"))
-    parts.append(text(1050, 510, values["Lines Removed"], "#ed8796", 12.5, text_anchor="end"))
-    parts.append(text(1070, 510, ")", "#d1cede", 12.5, text_anchor="end"))
-    for index, color in enumerate(["#cdd6f4", "#a6e3a1", "#94e2d5", "#89dceb", "#89b4fa", "#b4befe", "#cba6f7", "#f9e2af", "#f5c2e7"]):
-        parts.append(f'<circle cx="{452 + index * 15}" cy="561" r="3.6" fill="{color}"/>')
-    parts.extend([
-        text(30, 608, "λ ~/", "#a6d8d2", 13),
-        text(79, 608, "·" * 129, "#555367", 7.2),
-        text(1088, 608, updated + " UTC", "#747187", 10, text_anchor="end"),
-        text(30, 631, "❯", "#c8b8db", 14),
-        '</g></svg>\n',
-    ])
+    for label, x, y, right in [
+        ("Repos", 465, 458, 725), ("Stars", 770, 458, 1070),
+        ("Contributed", 465, 482, 725), ("Commits", 770, 482, 1070),
+    ]:
+        field(parts, label, values[label], x, y, right, gold, blue)
+    # Keep the net, additions, and deletions together in one right-aligned text run.
+    changes = [
+        (values["Lines of Code"], blue), (" ( ", TEXT),
+        ("+" + f"{activity['added']:,}", "#a6da95"), (" / ", TEXT),
+        ("-" + f"{activity['deleted']:,}", "#ed8796"), (" )", TEXT),
+    ]
+    parts.append(text(465, 512, "Lines of Code", gold, FONT_SIZE))
+    leaders(parts, "Lines of Code", sum(len(value) for value, _ in changes), 465, 512, 1070)
+    spans = ''.join(f'<tspan fill="{color}">{escape(value)}</tspan>' for value, color in changes)
+    parts.append(f'<text x="1070" y="512" font-size="{FONT_SIZE}" text-anchor="end" xml:space="preserve">{spans}</text>')
+    parts.append('</g></svg>\n')
     (ROOT / "assets/profile.svg").write_text("\n".join(parts), encoding="utf-8")
     # Accessible text keeps the profile useful without image rendering.
     summary = "\n".join(
@@ -258,7 +247,7 @@ def main():
     else:
         profile, repos = public_data()
         activity = collect_activity(profile, repos)
-    render(profile, repos, datetime.now(timezone.utc).strftime("%Y-%m-%d"), activity)
+    render(profile, repos, activity)
 
 
 if __name__ == "__main__":
