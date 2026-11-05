@@ -173,7 +173,7 @@ def render(profile, repos, activity):
         '<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="570" viewBox="0 0 1120 570" role="img" aria-labelledby="title description">',
         '<title id="title">hudbeard@github</title>',
         '<desc id="description">Hudson’s terminal profile, with a cyan ASCII avatar and System, Software, Uptime / Age, and GitHub Stats sections. GitHub stats show public repositories, stars, contributed repositories, commits, and net line changes.</desc>',
-        '<rect width="1120" height="570" fill="#1e1e2e"/>',
+        '<rect width="1120" height="570" fill="#0d1117"/>',
         '<g font-family="DejaVu Sans Mono, Liberation Mono, Consolas, monospace">',
         text(30, 36, "hudbeard@github", "#c8c5dc", 13),
         text(157, 36, "~", "#a6b4cf", 13),
